@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQs - Spackrov League</title>
+  <style>
+    /* Global Reset & Base Styles */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: #0a0c0c; color: #ffffff; font-family: Arial, sans-serif; min-height: 100vh; }
+    
+    /* Navigation with background */
+    .nav { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      padding: 30px 20px; 
+      z-index: 1000; 
+      background: rgba(10,12,12,0.95); 
+    }
+    .nav-container { 
+      max-width: 800px; 
+      margin: 0 auto; 
+      display: flex; 
+      align-items: center; 
+      gap: 50px;
+      justify-content: center;
+    }
+    .nav-link { 
+      color: #FFD700; 
+      text-decoration: none; 
+      font-size: 16px; 
+      opacity: 0.7; 
+      transition: opacity 0.3s; 
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-link:hover { opacity: 1; }
+    /* Underline active main tab */
+    .nav-link.active { 
+      opacity: 1; 
+      font-weight: bold; 
+      border-bottom: 2px solid #FFD700; 
+    }
+    .logo img { 
+      height: 40px; 
+      width: auto; 
+      transition: transform 0.3s; 
+    }
+    .logo:hover img { transform: scale(1.05); }
+    .dropdown { 
+      position: absolute; 
+      top: 100%; 
+      left: 50%; 
+      transform: translateX(-50%) translateY(10px); 
+      background: rgba(0,0,0,0.9); 
+      backdrop-filter: blur(10px); 
+      min-width: 200px; 
+      border-radius: 8px; 
+      padding: 10px 0; 
+      opacity: 0; 
+      visibility: hidden; 
+      transition: all 0.3s ease; 
+      box-shadow: 0 4px 20px rgba(255,215,0,0.1); 
+    }
+    .nav-link:hover .dropdown { 
+      opacity: 1; 
+      visibility: visible; 
+      transform: translateX(-50%) translateY(0); 
+    }
+    .dropdown-item { 
+      color: #FFD700; 
+      text-decoration: none; 
+      padding: 10px 20px; 
+      display: block; 
+      text-align: center; 
+      opacity: 0.7; 
+      transition: all 0.2s; 
+    }
+    .dropdown-item:hover { 
+      opacity: 1; 
+      background: rgba(255,215,0,0.1); 
+    }
+    /* Highlight active dropdown item */
+    .dropdown-item.active { 
+      opacity: 1; 
+      background: rgba(255,215,0,0.2); 
+    }
+    
+    /* Hero Section for FAQs */
+    .hero { 
+      min-height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: flex-start; 
+      align-items: center; 
+      text-align: center; 
+      padding: 80px 20px 40px; /* extra top padding for nav space */
+    }
+    .hero h1 { 
+      font-size: 48px; 
+      margin-bottom: 20px; 
+      background: linear-gradient(45deg, #FFD700, #FFD700); 
+      -webkit-background-clip: text; 
+      background-clip: text; 
+      color: transparent; 
+      font-style: italic; 
+    }
+    
+    /* FAQ Content Styles */
+    .faq-content {
+      width: 100%;
+      max-width: 800px;
+      text-align: left;
+      margin: 20px 0;
+    }
+    .faq-item {
+      margin-bottom: 20px;
+    }
+    .faq-item h2 {
+      font-size: 20px;
+      margin-bottom: 5px;
+      color: #FFD700;
+    }
+    .faq-item p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #ffffff;
+    }
+    
+    .cta-button { 
+      background-color: #FFD700; 
+      color: #000; 
+      padding: 15px 30px; 
+      border-radius: 5px; 
+      text-decoration: none; 
+      font-weight: bold; 
+      transition: all 0.3s; 
+      margin-top: 20px;
+    }
+    .cta-button:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 4px 20px rgba(255,215,0,0.3); 
+    }
+    
+    /* Floating Background Elements */
+    .floating-elements { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      pointer-events: none; 
+      z-index: -1; 
+      overflow: hidden; 
+    }
+    .floating-element { 
+      position: absolute; 
+      background: linear-gradient(45deg, rgba(18,59,59,0.15), rgba(255,215,0,0.1)); 
+      border-radius: 50%; 
+      animation: float 20s infinite linear, glow 4s infinite ease-in-out; 
+    }
+    @keyframes float { 
+      0% { transform: translate(0,0) rotate(0deg); } 
+      50% { transform: translate(100px,100px) rotate(180deg); } 
+      100% { transform: translate(0,0) rotate(360deg); } 
+    }
+    @keyframes glow { 
+      0% { box-shadow: 0 0 20px rgba(255,215,0,0.1); } 
+      50% { box-shadow: 0 0 40px rgba(255,215,0,0.2); } 
+      100% { box-shadow: 0 0 20px rgba(255,215,0,0.1); } 
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Background -->
+  <div class="floating-elements" id="floatingElements"></div>
+  
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-container">
+      <!-- Left side tabs -->
+      <div class="nav-link">
+        Teams
+        <div class="dropdown">
+          <a href="teams.html" class="dropdown-item">View Teams</a>
+          <a href="rosters.html" class="dropdown-item">Rosters</a>
+          <a href="player-profiles.html" class="dropdown-item">Player Profiles</a>
+        </div>
+      </div>
+      <div class="nav-link">
+        Stats
+        <div class="dropdown">
+          <a href="player-stats.html" class="dropdown-item">Player Stats</a>
+          <a href="team-stats.html" class="dropdown-item">Team Stats</a>
+          <a href="league-standings.html" class="dropdown-item">League Standings</a>
+        </div>
+      </div>
+      <div class="nav-link">
+        Games
+        <div class="dropdown">
+          <a href="schedule-requests.html" class="dropdown-item">Schedule Requests</a>
+          <a href="completed-games.html" class="dropdown-item">Completed Games</a>
+          <a href="playoff-bracket.html" class="dropdown-item">Playoff Bracket</a>
+          <a href="streams.html" class="dropdown-item">Streams Links</a>
+        </div>
+      </div>
+      <!-- Centered logo -->
+      <a href="index.html" class="logo">
+        <img src="static/images/logo.png" alt="SPACKROV Logo">
+      </a>
+      <!-- Right side tabs -->
+      <div class="nav-link">
+        <a href="rules.html" style="color: inherit; text-decoration: none;">Rules</a>
+      </div>
+      <div class="nav-link">
+        <a href="league-history.html" style="color: inherit; text-decoration: none;">History</a>
+      </div>
+      <div class="nav-link active">
+        Support
+        <div class="dropdown">
+          <a href="contact.html" class="dropdown-item">Contact Us</a>
+          <a href="faqs.html" class="dropdown-item active">FAQs</a>
+          <a href="discord.html" class="dropdown-item">Discord Links</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Hero Section for FAQs -->
+  <main class="hero">
+    <h1>Frequently Asked Questions</h1>
+    <div class="faq-content">
+      <div class="faq-item">
+        <h2>How do I get face cards?</h2>
+        <p>Face Cards are $10 to update and will be done by contacting the commissioner.</p>
+      </div>
+      <div class="faq-item">
+        <h2>Are there individual awards?</h2>
+        <p>Season 1 will not have individual awards, but very likely will have rewards in the future.</p>
+      </div>
+      <div class="faq-item">
+        <h2>What do you get for winning?</h2>
+        <p>The payout is indicative of the number of teams playing.</p>
+      </div>
+      <div class="faq-item">
+        <h2>How do we receive the money?</h2>
+        <p>The commissioner will contact the team leader and pay him/her.</p>
+      </div>
+      <div class="faq-item">
+        <h2>How much does 2nd and 3rd place receive?</h2>
+        <p>Rewards will only go towards the champions for this season. No rewards will be given to anyone else.</p>
+      </div>
+      <div class="faq-item">
+        <h2>How long is the season?</h2>
+        <p>Season 1 is two weeks long. Playoffs will be between 1 -2 weeks.</p>
+      </div>
+      <div class="faq-item">
+        <h2>How can I become playoff eligible?</h2>
+        <p>Teams must play a total of at least 10 games to be playoff eligible.</p>
+      </div>
+      <div class="faq-item">
+        <h2>Why did my stats not show up?</h2>
+        <p>Stats will only work if the screenshot sent into the Discord is in perfect formatting. There are factors that would cause this such as the image being blurry, too large/small, cut off, etc. The team record is still updated regardless of screenshot format, unless it is taken via camera. We will NOT accept those images.</p>
+      </div>
+      <div class="faq-item">
+        <h2>How long until my stats show up?</h2>
+        <p>It takes 24 hours for stats to be processed.</p>
+      </div>
+      <div class="faq-item">
+        <h2>Is there a schedule?</h2>
+        <p>Teams are responsible for scheduling their own games.</p>
+      </div>
+    </div>
+    <a href="contact.html" class="cta-button">Contact Us</a>
+  </main>
+  
+  <script>
+    // Create floating background elements
+    const floatingElements = document.getElementById('floatingElements');
+    for (let i = 0; i < 8; i++) {
+      const element = document.createElement('div');
+      element.className = 'floating-element';
+      const size = Math.random() * 200 + 100;
+      element.style.width = size + 'px';
+      element.style.height = size + 'px';
+      element.style.left = Math.random() * 100 + '%';
+      element.style.top = Math.random() * 100 + '%';
+      const duration = Math.random() * 10 + 10;
+      const delay = Math.random() * -20;
+      element.style.animation = `float ${duration}s ${delay}s infinite linear, glow 4s infinite ease-in-out`;
+      floatingElements.appendChild(element);
+    }
+  </script>
+</body>
+</html>

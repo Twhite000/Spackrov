@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schedule Requests - Spackrov League</title>
+  <style>
+    /* Global Reset & Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #0a0c0c;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      padding-top: 100px; /* space for fixed nav */
+    }
+    /* Navigation (consistent with other pages) */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      background-color: rgba(10, 12, 12, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+    }
+    .nav-container {
+      display: flex;
+      align-items: center;
+      gap: 50px;
+    }
+    .nav-link {
+      color: #ffd700;
+      text-decoration: none;
+      font-size: 16px;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+      position: relative;
+      cursor: pointer;
+    }
+    .nav-link:hover, .nav-link.active {
+      opacity: 1;
+    }
+    .nav-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: #ffd700;
+    }
+    .logo img {
+      height: 40px;
+      width: auto;
+      transition: transform 0.3s;
+    }
+    .logo:hover img {
+      transform: scale(1.05);
+    }
+    .dropdown {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      min-width: 200px;
+      border-radius: 8px;
+      padding: 10px 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(255, 215, 0, 0.1);
+    }
+    .nav-link:hover .dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+    .dropdown-item {
+      color: #ffd700;
+      text-decoration: none;
+      padding: 10px 20px;
+      display: block;
+      text-align: center;
+      opacity: 0.7;
+      transition: all 0.2s;
+    }
+    .dropdown-item:hover {
+      opacity: 1;
+      background: rgba(255, 215, 0, 0.1);
+    }
+    .dropdown-item.active {
+      background: rgba(255, 215, 0, 0.2);
+      opacity: 1;
+    }
+    .restricted-access {
+      color: #ffd700;
+      opacity: 0.5;
+      font-size: 12px;
+      text-align: center;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+      margin-bottom: 5px;
+    }
+    /* Container Styles */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .schedule-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .schedule-header h1 {
+      font-size: 48px;
+      background: linear-gradient(45deg, #ffd700, #ffd700);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-style: italic;
+      margin-bottom: 15px;
+    }
+    .schedule-header p {
+      font-size: 20px;
+      color: #89a3a3;
+    }
+    /* Login Form Styles */
+    .login-form {
+      max-width: 400px;
+      margin: 0 auto 30px;
+      padding: 20px;
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 10px;
+      background: rgba(18,59,59,0.15);
+      text-align: center;
+    }
+    .login-form h2 {
+      margin-bottom: 15px;
+      font-size: 24px;
+      color: #ffd700;
+    }
+    .login-form input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ffd700;
+      border-radius: 5px;
+      background: transparent;
+      color: #fff;
+      font-size: 16px;
+    }
+    .login-form button {
+      background: #ffd700;
+      color: #000;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .login-form button:hover {
+      background: #e6c200;
+    }
+    .login-error {
+      color: #ff5555;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    /* Opponent Selector & Captain Toggle */
+    .selector-container {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .selector-container label {
+      font-size: 16px;
+      margin-right: 10px;
+      color: #ffd700;
+    }
+    .selector-container select,
+    .selector-container input[type="radio"] {
+      margin: 5px;
+      padding: 5px;
+      font-size: 16px;
+      border: 1px solid #ffd700;
+      border-radius: 5px;
+      background: transparent;
+      color: #fff;
+    }
+    /* Timeslot Grid */
+    .timeslot-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .timeslot-button {
+      padding: 10px 15px;
+      border: 1px solid #ffd700;
+      border-radius: 5px;
+      background-color: transparent;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+      min-width: 90px;
+      text-align: center;
+    }
+    /* State classes for timeslots */
+    .timeslot-proposed {
+      background-color: grey;
+    }
+    .timeslot-confirmed {
+      background-color: #4caf50; /* green */
+    }
+    /* Note about Eastern Time */
+    .time-note {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #89a3a3;
+    }
+    /* Floating Background Elements (same style as others) */
+    .floating-elements {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
+    .floating-element {
+      position: absolute;
+      background: linear-gradient(45deg, rgba(18,59,59,0.15), rgba(255,215,0,0.1));
+      border-radius: 50%;
+      animation: float 20s infinite linear, glow 4s infinite ease-in-out;
+    }
+    @keyframes float {
+      0% { transform: translate(0,0) rotate(0deg); }
+      50% { transform: translate(100px,100px) rotate(180deg); }
+      100% { transform: translate(0,0) rotate(360deg); }
+    }
+    @keyframes glow {
+      0% { box-shadow: 0 0 20px rgba(255,215,0,0.1); }
+      50% { box-shadow: 0 0 40px rgba(255,215,0,0.2); }
+      100% { box-shadow: 0 0 20px rgba(255,215,0,0.1); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Background -->
+  <div class="floating-elements" id="floatingElements"></div>
+  
+  <!-- Navigation (same as other pages) -->
+  <nav class="nav">
+    <div class="nav-container">
+      <div class="nav-link">
+        Teams
+        <div class="dropdown">
+          <a href="teams.html" class="dropdown-item">View Teams</a>
+          <a href="rosters.html" class="dropdown-item">Rosters &amp; Face Cards</a>
+          <a href="player-profiles.html" class="dropdown-item">Player Profiles</a>
+        </div>
+      </div>
+      <div class="nav-link">
+        Stats
+        <div class="dropdown">
+          <a href="player-stats.html" class="dropdown-item">Player Stats</a>
+          <a href="team-stats.html" class="dropdown-item">Team Stats</a>
+          <a href="league-standings.html" class="dropdown-item">League Standings</a>
+        </div>
+      </div>
+      <div class="nav-link">
+        Games
+        <div class="dropdown">
+          <a href="schedule-requests.html" class="dropdown-item active">Schedule Requests</a>
+          <a href="completed-games.html" class="dropdown-item">Completed Games</a>
+          <a href="playoff-bracket.html" class="dropdown-item">Playoff Bracket</a>
+          <a href="streams.html" class="dropdown-item">Streams Links</a>
+        </div>
+      </div>
+      <a href="index.html" class="logo">
+        <img src="C:\Users\taevo\Downloads\IMG_0215.png" alt="SPACKROV Logo" />
+      </a>
+      <div class="nav-link">
+        Upload
+        <div class="dropdown">
+          <div class="restricted-access">(Captains Only)</div>
+          <a href="upload-screenshots.html" class="dropdown-item">Upload Screenshots</a>
+          <a href="review-stats.html" class="dropdown-item">Review Extracted Stats</a>
+          <a href="image-data-logs.html" class="dropdown-item">Image &amp; Data Logs</a>
+        </div>
+      </div>
+      <div class="nav-link">
+        Info
+        <div class="dropdown">
+          <a href="rules.html" class="dropdown-item">Rules &amp; Regulations</a>
+          <a href="league-history.html" class="dropdown-item">League History &amp; Records</a>
+          <a href="season-overview.html" class="dropdown-item">Season 1 Overview</a>
+        </div>
+      </div>
+      <div class="nav-link">
+        Support
+        <div class="dropdown">
+          <a href="contact.html" class="dropdown-item">Contact Us</a>
+          <a href="faqs.html" class="dropdown-item">FAQs</a>
+          <a href="discord.html" class="dropdown-item">Discord Link</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Main Container -->
+  <div class="container">
+    <div class="schedule-header">
+      <h1>Schedule Request</h1>
+      <p>Select your timeslot for a game (Eastern Time). Only authorized captains may schedule.</p>
+    </div>
+    
+    <!-- Login Form (Gatewall) -->
+    <div id="loginSection" class="login-form">
+      <h2>Captain Login</h2>
+      <div id="loginError" class="login-error" style="display:none;"></div>
+      <input type="text" id="username" placeholder="Username" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button id="loginButton">Log In</button>
+    </div>
+    
+    <!-- Schedule UI (hidden until login succeeds) -->
+    <div id="scheduleUI" style="display:none;">
+      <!-- Opponent Selection & Captain Role Toggle -->
+      <div class="selector-container">
+        <label for="opponentSelect">Choose Opponent:</label>
+        <select id="opponentSelect">
+          <option value="">--Select Opponent--</option>
+          <option value="teamBeta">Team Beta</option>
+          <option value="teamGamma">Team Gamma</option>
+          <option value="teamDelta">Team Delta</option>
+        </select>
+        <br /><br />
+        <label>Current Captain:</label>
+        <label>
+          <input type="radio" name="captain" value="captain1" checked />
+          Your Captain Account
+        </label>
+        <label>
+          <input type="radio" name="captain" value="captain2" />
+          Opponent Captain
+        </label>
+      </div>
+      
+      <!-- Timeslot Grid (initially hidden until opponent selected) -->
+      <div id="timeslotContainer" style="display:none;">
+        <div class="timeslot-grid" id="timeslotGrid"></div>
+        <div class="time-note">All times are in Eastern Time (ET)</div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    /*************** Floating Background ***************/
+    const floatingElements = document.getElementById('floatingElements');
+    for (let i = 0; i < 8; i++) {
+      const element = document.createElement('div');
+      element.className = 'floating-element';
+      const size = Math.random() * 200 + 100;
+      element.style.width = size + "px";
+      element.style.height = size + "px";
+      element.style.left = Math.random() * 100 + "%";
+      element.style.top = Math.random() * 100 + "%";
+      const duration = Math.random() * 10 + 10;
+      const delay = Math.random() * -20;
+      element.style.animation = `float ${duration}s ${delay}s infinite linear, glow 4s infinite ease-in-out`;
+      floatingElements.appendChild(element);
+    }
+    
+    /*************** Simple Gatewall Logic ***************/
+    // Authorized credentials (for demonstration only)
+    const authorizedUsers = {
+      "captainAlpha": "alpha123",
+      "captainBeta": "beta123",
+      "admin": "admin123"
+    };
+    
+    const loginButton = document.getElementById("loginButton");
+    loginButton.addEventListener("click", function() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const loginError = document.getElementById("loginError");
+      
+      if (authorizedUsers[username] && authorizedUsers[username] === password) {
+        // Successful login
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("scheduleUI").style.display = "block";
+      } else {
+        // Invalid credentials
+        loginError.textContent = "Invalid username or password. Please try again.";
+        loginError.style.display = "block";
+      }
+    });
+    
+    /*************** Timeslot Scheduling Logic ***************/
+    // Global array to track timeslot state
+    // Each slot: { time: "5:00 PM", state: "available" | "proposed" | "confirmed", proposedBy: null | "captain1" | "captain2" }
+    const timeslots = [];
+    const timeslotGrid = document.getElementById('timeslotGrid');
+    
+    // Format minutes to "h:mm AM/PM"
+    function formatTime(totalMinutes) {
+      let hours = Math.floor(totalMinutes / 60);
+      let minutes = totalMinutes % 60;
+      let period = hours >= 12 ? "PM" : "AM";
+      if (hours > 12) hours -= 12;
+      if (hours === 0) hours = 12;
+      return hours + ":" + (minutes === 0 ? "00" : minutes) + " " + period;
+    }
+    
+    // Generate timeslots every 30 minutes from 5:00 PM (17:00) to 12:00 AM (24:00)
+    const startMinutes = 17 * 60; // 1020 minutes
+    const endMinutes = 24 * 60;   // 1440 minutes
+    for (let t = startMinutes; t <= endMinutes; t += 30) {
+      timeslots.push({ time: formatTime(t), state: "available", proposedBy: null });
+    }
+    
+    // Update timeslot button UI
+    function updateTimeslotUI(button, slot) {
+      button.textContent = slot.time;
+      button.className = "timeslot-button"; // reset classes
+      if (slot.state === "proposed") {
+        button.classList.add("timeslot-proposed");
+      } else if (slot.state === "confirmed") {
+        button.classList.add("timeslot-confirmed");
+      }
+    }
+    
+    // Render the timeslot grid
+    function renderTimeslots() {
+      timeslotGrid.innerHTML = "";
+      timeslots.forEach((slot, index) => {
+        const btn = document.createElement("button");
+        btn.className = "timeslot-button";
+        btn.textContent = slot.time;
+        btn.dataset.index = index;
+        updateTimeslotUI(btn, slot);
+        btn.addEventListener("click", () => {
+          const currentCaptain = document.querySelector('input[name="captain"]:checked').value;
+          const slotObj = timeslots[index];
+          
+          if (slotObj.state === "available") {
+            // Clear any previous proposal by current captain
+            timeslots.forEach((s, i) => {
+              if (s.proposedBy === currentCaptain && s.state === "proposed") {
+                s.state = "available";
+                s.proposedBy = null;
+                const otherBtn = timeslotGrid.querySelector(`button[data-index="${i}"]`);
+                updateTimeslotUI(otherBtn, s);
+              }
+            });
+            // Set this slot as proposed by current captain
+            slotObj.state = "proposed";
+            slotObj.proposedBy = currentCaptain;
+            updateTimeslotUI(btn, slotObj);
+          } else if (slotObj.state === "proposed") {
+            // If proposed by the other captain, then confirm it
+            if (slotObj.proposedBy !== currentCaptain) {
+              slotObj.state = "confirmed";
+              updateTimeslotUI(btn, slotObj);
+            }
+          }
+        });
+        timeslotGrid.appendChild(btn);
+      });
+    }
+    
+    // Show timeslot grid when an opponent is selected
+    document.getElementById("opponentSelect").addEventListener("change", function () {
+      if (this.value !== "") {
+        document.getElementById("timeslotContainer").style.display = "block";
+        renderTimeslots();
+      } else {
+        document.getElementById("timeslotContainer").style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>

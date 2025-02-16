@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Playoff Bracket - Spackrov League</title>
+  <style>
+    /* Global Reset & Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #0a0c0c;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      padding-top: 100px; /* To account for fixed nav */
+    }
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 30px 20px;
+      z-index: 1000;
+      background: rgba(10, 12, 12, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+    }
+    .nav-container {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 50px; /* Consistent gap */
+      justify-content: center;
+    }
+    .nav-link {
+      color: #FFD700;
+      text-decoration: none;
+      font-size: 16px; /* Consistent font size */
+      opacity: 0.7;
+      position: relative;
+      transition: opacity 0.3s;
+      cursor: pointer;
+    }
+    .nav-link:hover { opacity: 1; }
+    .nav-link.active {
+      opacity: 1;
+      font-weight: bold;
+    }
+    .nav-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: #FFD700;
+    }
+    .logo img {
+      height: 40px;
+      width: auto;
+      transition: transform 0.3s;
+    }
+    .logo:hover img { transform: scale(1.05); }
+    .dropdown {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      min-width: 200px;
+      border-radius: 8px;
+      padding: 10px 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(255, 215, 0, 0.1);
+    }
+    .nav-link:hover .dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+    .dropdown-item {
+      color: #FFD700;
+      text-decoration: none;
+      padding: 10px 20px;
+      display: block;
+      text-align: center;
+      opacity: 0.7;
+      transition: all 0.2s;
+    }
+    .dropdown-item:hover { 
+      opacity: 1; 
+      background: rgba(255, 215, 0, 0.1); 
+    }
+    .dropdown-item.active { 
+      opacity: 1; 
+      background: rgba(255, 215, 0, 0.2); 
+    }
+    /* Main Content */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    .bracket-title {
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 48px;
+      background: linear-gradient(45deg, #FFD700, #FFD700);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-style: italic;
+    }
+    /* New style: Team names now use the same gradient as the title */
+    .team-name {
+      background: linear-gradient(45deg, #FFD700, #FFD700);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    /* Bracket Styles */
+    .bracket-container {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 20px;
+      overflow-x: auto;
+      padding-bottom: 40px;
+    }
+    .bracket-round {
+      background: rgba(18, 59, 59, 0.15);
+      padding: 20px;
+      border-radius: 8px;
+      min-width: 220px;
+      flex-shrink: 0;
+    }
+    .bracket-round h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #FFD700;
+    }
+    .match {
+      background: rgba(10, 12, 12, 0.8);
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .match .team {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 5px 0;
+      flex-direction: column;
+    }
+    .match .team img.team-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 215, 0, 0.3);
+    }
+    .match .team.winner {
+      background: rgba(255, 215, 0, 0.2);
+      border-radius: 4px;
+      padding: 5px;
+    }
+    .match button {
+      background: #FFD700;
+      border: none;
+      padding: 5px 10px;
+      margin-top: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    /* Seed Number Styling */
+    .seed-number {
+      font-size: 14px;
+      color: #FFD700;
+      font-weight: bold;
+      margin-right: 4px;
+    }
+    /* Admin Panel */
+    .admin-panel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(10, 12, 12, 0.9);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      z-index: 1100;
+    }
+    .admin-panel button {
+      background: #FFD700;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    /* Floating Background */
+    .floating-elements {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
+    .floating-element {
+      position: absolute;
+      background: linear-gradient(45deg, rgba(18, 59, 59, 0.15), rgba(255, 215, 0, 0.1));
+      border-radius: 50%;
+      animation: float 20s infinite linear, glow 4s infinite ease-in-out;
+    }
+    @keyframes float {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(100px, 100px) rotate(180deg); }
+      100% { transform: translate(0, 0) rotate(360deg); }
+    }
+    @keyframes glow {
+      0% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.1); }
+      50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.2); }
+      100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.1); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Background -->
+  <div class="floating-elements" id="floatingElements"></div>
+  
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-container">
+      <!-- Left side tabs -->
+      <div class="nav-link">
+        Teams
+        <div class="dropdown">
+          <a href="teams.html" class="dropdown-item">View Teams</a>
+          <a href="rosters.html" class="dropdown-item">Rosters</a>
+        </div>
+      </div>
+      <div class="nav-link">
+        Stats
+        <div class="dropdown">
+          <a href="player-stats.html" class="dropdown-item">Player Stats</a>
+          <a href="league-standings.html" class="dropdown-item">League Standings</a>
+        </div>
+      </div>
+      <!-- Games tab is active -->
+      <div class="nav-link active">
+        Games
+        <div class="dropdown">
+          <a href="playoff-bracket.html" class="dropdown-item active">Playoff Bracket</a>
+          <a href="streams.html" class="dropdown-item">Streams Links</a>
+        </div>
+      </div>
+      <!-- Centered logo -->
+      <a href="index.html" class="logo">
+        <img src="C:/Users/taevo/Downloads/IMG_0215.png" alt="SPACKROV Logo">
+      </a>
+      <div class="nav-link">
+        <a href="rules.html" style="color: inherit; text-decoration: none;">Rules</a>
+      </div>
+      <div class="nav-link">
+        <a href="league-history.html" style="color: inherit; text-decoration: none;">History</a>
+      </div>
+      <div class="nav-link">
+        Support
+        <div class="dropdown">
+          <a href="contact.html" class="dropdown-item">Contact Us</a>
+          <a href="faqs.html" class="dropdown-item">FAQs</a>
+          <a href="discord.html" class="dropdown-item">Discord Link</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="container">
+    <h1 class="bracket-title">Playoff Bracket</h1>
+    <div id="bracketContainer" class="bracket-container">
+      <!-- Bracket rounds will be rendered here -->
+    </div>
+  </div>
+  
+  <!-- Floating Background Script -->
+  <script>
+    const floatingElements = document.getElementById('floatingElements');
+    for (let i = 0; i < 8; i++) {
+      const element = document.createElement('div');
+      element.className = 'floating-element';
+      const size = Math.random() * 200 + 100;
+      element.style.width = `${size}px`;
+      element.style.height = `${size}px`;
+      element.style.left = `${Math.random() * 100}%`;
+      element.style.top = `${Math.random() * 100}%`;
+      const duration = Math.random() * 10 + 10;
+      const delay = Math.random() * -20;
+      element.style.animation = `float ${duration}s ${delay}s infinite linear, glow 4s infinite ease-in-out`;
+      floatingElements.appendChild(element);
+    }
+  </script>
+  
+  <!-- Playoff Bracket Script -->
+  <script>
+    // Replace with your actual SheetDB endpoint URL:
+    const sheetdbEndpoint = 'https://sheetdb.io/api/v1/e5ltabttwmjoa';
+    
+    let standings = [];
+    let playoffBracket = null; // Holds our bracket state
+
+    // Check if admin mode is enabled
+    function isAdmin() {
+      return window.location.hash === "#admin";
+    }
+
+    // Validate bracket structure
+    function isValidBracket(bracket) {
+      return bracket && Array.isArray(bracket.R16) && Array.isArray(bracket.QF) &&
+             Array.isArray(bracket.SF) && Array.isArray(bracket.F);
+    }
+
+    // Fetch standings from SheetDB
+    function fetchStandings() {
+      fetch(sheetdbEndpoint)
+        .then(response => {
+          if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+          return response.json();
+        })
+        .then(data => {
+          console.log("Standings data:", data);
+          standings = data;
+          if (standings.length < 16) {
+            console.error("Not enough teams in standings. Found:", standings.length);
+            return;
+          }
+          // Use the top 16 teams (assuming they are in seed order)
+          const top16 = standings.slice(0, 16);
+          // Assign seed numbers (1 through 16)
+          top16.forEach((team, index) => {
+            team.seed = index + 1;
+          });
+          
+          const savedBracket = localStorage.getItem("playoffBracket");
+          if (savedBracket) {
+            try {
+              const parsedBracket = JSON.parse(savedBracket);
+              if (isValidBracket(parsedBracket)) {
+                playoffBracket = parsedBracket;
+              } else {
+                console.warn("Saved bracket is invalid. Regenerating bracket.");
+                playoffBracket = generateInitialBracket(top16);
+              }
+            } catch (e) {
+              console.error("Error parsing saved bracket:", e);
+              playoffBracket = generateInitialBracket(top16);
+            }
+          } else {
+            playoffBracket = generateInitialBracket(top16);
+          }
+          console.log("Bracket structure:", playoffBracket);
+          renderBracket();
+        })
+        .catch(error => {
+          console.error("Error fetching standings:", error);
+        });
+    }
+
+    // Generate initial bracket using the top 16 teams (1 vs 16, 2 vs 15, etc.)
+    function generateInitialBracket(teams) {
+      return {
+        R16: [
+          { id: "R16_1", team1: teams[0],  team2: teams[15], winner: null },
+          { id: "R16_2", team1: teams[1],  team2: teams[14], winner: null },
+          { id: "R16_3", team1: teams[2],  team2: teams[13], winner: null },
+          { id: "R16_4", team1: teams[3],  team2: teams[12], winner: null },
+          { id: "R16_5", team1: teams[4],  team2: teams[11], winner: null },
+          { id: "R16_6", team1: teams[5],  team2: teams[10], winner: null },
+          { id: "R16_7", team1: teams[6],  team2: teams[9],  winner: null },
+          { id: "R16_8", team1: teams[7],  team2: teams[8],  winner: null }
+        ],
+        QF: [
+          { id: "QF1", team1: null, team2: null, winner: null },
+          { id: "QF2", team1: null, team2: null, winner: null },
+          { id: "QF3", team1: null, team2: null, winner: null },
+          { id: "QF4", team1: null, team2: null, winner: null }
+        ],
+        SF: [
+          { id: "SF1", team1: null, team2: null, winner: null },
+          { id: "SF2", team1: null, team2: null, winner: null }
+        ],
+        F: [
+          { id: "F", team1: null, team2: null, winner: null }
+        ]
+      };
+    }
+
+    // Render the bracket on the page
+    function renderBracket() {
+      const container = document.getElementById("bracketContainer");
+      container.innerHTML = "";
+      const rounds = [
+        { name: "Round of 16", key: "R16" },
+        { name: "Quarterfinals", key: "QF" },
+        { name: "Semifinals", key: "SF" },
+        { name: "Final", key: "F" }
+      ];
+      rounds.forEach(round => {
+        if (!playoffBracket[round.key] || !Array.isArray(playoffBracket[round.key])) {
+          console.error(`Bracket round "${round.key}" is not defined properly.`);
+          return;
+        }
+        const roundDiv = document.createElement("div");
+        roundDiv.className = "bracket-round";
+        const title = document.createElement("h2");
+        title.textContent = round.name;
+        roundDiv.appendChild(title);
+        
+        playoffBracket[round.key].forEach(match => {
+          const matchDiv = document.createElement("div");
+          matchDiv.className = "match";
+          matchDiv.setAttribute("data-match-id", match.id);
+
+          // Helper function to create a team display (including seed number)
+          function createTeamDiv(team, slot) {
+            const div = document.createElement("div");
+            div.className = "team";
+            if (match.winner && team && match.winner === team.team) {
+              div.classList.add("winner");
+            }
+            if (team) {
+              div.innerHTML = `<span class="seed-number">${team.seed}</span>
+                               <img src="${team.logo}" alt="${team.team} Logo" class="team-logo">
+                               <span class="team-name">${team.team}</span>`;
+            } else {
+              div.innerHTML = `<span class="team-name">TBD</span>`;
+            }
+            if (isAdmin() && !match.winner && team) {
+              const btn = document.createElement("button");
+              btn.textContent = `Advance ${team.team}`;
+              btn.onclick = () => setWinner(match.id, slot);
+              div.appendChild(btn);
+            }
+            return div;
+          }
+
+          const team1Div = createTeamDiv(match.team1, "team1");
+          const team2Div = createTeamDiv(match.team2, "team2");
+
+          matchDiv.appendChild(team1Div);
+          const vsSpan = document.createElement("span");
+          vsSpan.textContent = " vs ";
+          matchDiv.appendChild(vsSpan);
+          matchDiv.appendChild(team2Div);
+          roundDiv.appendChild(matchDiv);
+        });
+        container.appendChild(roundDiv);
+      });
+    }
+
+    // Set the winner for a match and propagate to the next round if needed
+    function setWinner(matchId, teamSlot) {
+      let matchObj = null;
+      for (const key of ["R16", "QF", "SF", "F"]) {
+        const found = playoffBracket[key].find(m => m.id === matchId);
+        if (found) {
+          matchObj = found;
+          break;
+        }
+      }
+      if (!matchObj) {
+        console.error("Match not found for id:", matchId);
+        return;
+      }
+      const selectedTeam = matchObj[teamSlot];
+      if (!selectedTeam) {
+        console.error("Selected team not found for slot:", teamSlot);
+        return;
+      }
+      matchObj.winner = selectedTeam.team;
+
+      // Advancement mapping to propagate winners
+      const advancementMapping = {
+        "R16_1": { nextRound: "QF", nextMatchIndex: 0, teamSlot: "team1" },
+        "R16_2": { nextRound: "QF", nextMatchIndex: 0, teamSlot: "team2" },
+        "R16_3": { nextRound: "QF", nextMatchIndex: 1, teamSlot: "team1" },
+        "R16_4": { nextRound: "QF", nextMatchIndex: 1, teamSlot: "team2" },
+        "R16_5": { nextRound: "QF", nextMatchIndex: 2, teamSlot: "team1" },
+        "R16_6": { nextRound: "QF", nextMatchIndex: 2, teamSlot: "team2" },
+        "R16_7": { nextRound: "QF", nextMatchIndex: 3, teamSlot: "team1" },
+        "R16_8": { nextRound: "QF", nextMatchIndex: 3, teamSlot: "team2" },
+        "QF1": { nextRound: "SF", nextMatchIndex: 0, teamSlot: "team1" },
+        "QF2": { nextRound: "SF", nextMatchIndex: 0, teamSlot: "team2" },
+        "QF3": { nextRound: "SF", nextMatchIndex: 1, teamSlot: "team1" },
+        "QF4": { nextRound: "SF", nextMatchIndex: 1, teamSlot: "team2" },
+        "SF1": { nextRound: "F",  nextMatchIndex: 0, teamSlot: "team1" },
+        "SF2": { nextRound: "F",  nextMatchIndex: 0, teamSlot: "team2" }
+      };
+
+      if (advancementMapping[matchId]) {
+        const mapping = advancementMapping[matchId];
+        const nextMatch = playoffBracket[mapping.nextRound][mapping.nextMatchIndex];
+        nextMatch[mapping.teamSlot] = selectedTeam;
+      }
+      localStorage.setItem("playoffBracket", JSON.stringify(playoffBracket));
+      renderBracket();
+    }
+
+    // Reset the bracket (admin only)
+    function resetBracket() {
+      if (!confirm("Reset the playoff bracket?")) return;
+      localStorage.removeItem("playoffBracket");
+      if (standings.length >= 16) {
+        playoffBracket = generateInitialBracket(standings.slice(0, 16));
+        renderBracket();
+      }
+    }
+
+    // Initialize bracket by fetching standings
+    fetchStandings();
+
+    // If in admin mode, add an admin panel with a reset button.
+    if (isAdmin()) {
+      const adminPanel = document.createElement("div");
+      adminPanel.className = "admin-panel";
+      const resetBtn = document.createElement("button");
+      resetBtn.textContent = "Reset Bracket";
+      resetBtn.onclick = resetBracket;
+      adminPanel.appendChild(resetBtn);
+      document.body.appendChild(adminPanel);
+    }
+  </script>
+</body>
+</html>
